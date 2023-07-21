@@ -453,7 +453,21 @@ static NSUInteger gcd(NSUInteger a, NSUInteger b)
 
 - (void)displayLayer:(CALayer *)layer
 {
-    layer.contents = (__bridge id)self.image.CGImage;
+    UIImage *currentFrame = self.currentFrame;
+    if (currentFrame) {
+        layer.contentsScale = currentFrame.scale;
+        layer.contents = (__bridge id)currentFrame.CGImage;
+    } else {
+        // If we have no animation frames, call super implementation. iOS 14+ UIImageView use this delegate method for rendering.
+        if ([UIImageView instancesRespondToSelector:@selector(displayLayer:)]) {
+            [super displayLayer:layer];
+        } else {
+            // Fallback to implements the static image rendering by ourselves (like macOS or before iOS 14)
+            currentFrame = super.image;
+            layer.contentsScale = currentFrame.scale;
+            layer.contents = (__bridge id)currentFrame.CGImage;
+        }
+    }
 }
 
 
